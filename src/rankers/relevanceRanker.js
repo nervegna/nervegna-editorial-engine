@@ -1,9 +1,9 @@
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import config from '../config/index.js';
 import { logger } from '../utils/logger.js';
 
-const anthropic = config.anthropic.apiKey
-  ? new Anthropic({ apiKey: config.anthropic.apiKey })
+const llm = config.llm.apiKey
+  ? new OpenAI({ apiKey: config.llm.apiKey, baseURL: config.llm.baseURL })
   : null;
 
 let warnedNoApiKey = false;
@@ -15,10 +15,10 @@ export async function calculateRelevanceScore(item) {
 
   const keywordScore = calculateKeywordMatch(item, povKeywords);
 
-  if (!anthropic || consecutiveFailures >= MAX_FAILURES) {
+  if (!llm || consecutiveFailures >= MAX_FAILURES) {
     if (!warnedNoApiKey) {
-      const reason = !anthropic
-        ? 'No Anthropic API key'
+      const reason = !llm
+        ? 'No LLM API key'
         : `API unavailable after ${MAX_FAILURES} consecutive failures`;
       logger.warn(`${reason}, using keyword-only relevance scoring`);
       warnedNoApiKey = true;
@@ -68,16 +68,13 @@ Rate the relevance on a scale of 0.0 to 1.0:
 
 Respond with ONLY a number between 0.0 and 1.0, nothing else.`;
 
-  const message = await anthropic.messages.create({
-    model: config.anthropic.model,
+  const response = await llm.chat.completions.create({
+    model: config.llm.model,
     max_tokens: 50,
-    messages: [{
-      role: 'user',
-      content: prompt,
-    }],
+    messages: [{ role: 'user', content: prompt }],
   });
 
-  const scoreText = message.content[0].text.trim();
+  const scoreText = response.choices[0].message.content.trim();
   const score = parseFloat(scoreText);
 
   if (isNaN(score) || score < 0 || score > 1) {

@@ -1,6 +1,7 @@
 import { scrapeRSSFeeds } from './rssScraper.js';
 import { scrapeGitHubTrending } from './githubScraper.js';
 import { scrapeSocialMedia } from './socialScraper.js';
+import { scrapeXPosts } from './xScraper.js';
 import { logger } from '../utils/logger.js';
 
 export async function scrapeAllSources() {
@@ -10,15 +11,17 @@ export async function scrapeAllSources() {
     rss: [],
     github: [],
     social: [],
+    x: [],
     timestamp: new Date().toISOString(),
   };
 
   try {
     // Parallel scraping for performance
-    const [rssContent, githubContent, socialContent] = await Promise.allSettled([
+    const [rssContent, githubContent, socialContent, xContent] = await Promise.allSettled([
       scrapeRSSFeeds(),
       scrapeGitHubTrending(),
       scrapeSocialMedia(),
+      scrapeXPosts(),
     ]);
 
     if (rssContent.status === 'fulfilled') {
@@ -42,7 +45,14 @@ export async function scrapeAllSources() {
       logger.error('Social scraping failed:', socialContent.reason);
     }
 
-    const totalItems = results.rss.length + results.github.length + results.social.length;
+    if (xContent.status === 'fulfilled') {
+      results.x = xContent.value;
+      logger.info(`Scraped ${xContent.value.length} X posts`);
+    } else {
+      logger.error('X scraping failed:', xContent.reason);
+    }
+
+    const totalItems = results.rss.length + results.github.length + results.social.length + results.x.length;
     logger.info(`Total content items scraped: ${totalItems}`);
 
     return results;
@@ -52,7 +62,7 @@ export async function scrapeAllSources() {
   }
 }
 
-export { scrapeRSSFeeds, scrapeGitHubTrending, scrapeSocialMedia };
+export { scrapeRSSFeeds, scrapeGitHubTrending, scrapeSocialMedia, scrapeXPosts };
 
 // Standalone execution
 if (process.argv[1] && process.argv[1].endsWith('scrapers/index.js')) {
@@ -62,6 +72,7 @@ if (process.argv[1] && process.argv[1].endsWith('scrapers/index.js')) {
         rss: results.rss.length,
         github: results.github.length,
         social: results.social.length,
+        x: results.x.length,
       }));
     })
     .catch(error => {

@@ -13,6 +13,9 @@ export function calculateEngagementScore(item) {
     case 'social':
       score = normalizeSocialEngagement(item.engagement);
       break;
+    case 'x':
+      score = normalizeXEngagement(item.engagement);
+      break;
     default:
       score = 0;
   }
@@ -44,6 +47,13 @@ function normalizeSocialEngagement(engagement) {
   const total = (favorites * 1) + (reblogs * 3) + (replies * 2);
 
   return Math.min(total / 500, 0.8);
+}
+
+function normalizeXEngagement(engagement) {
+  const { likes = 0, retweets = 0, replies = 0 } = engagement;
+  const total = (likes * 1) + (retweets * 4) + (replies * 2);
+
+  return Math.min(total / 2000, 0.8);
 }
 
 function calculateRecencyBonus(publishedDate) {

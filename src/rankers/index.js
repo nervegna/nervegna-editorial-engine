@@ -10,6 +10,7 @@ export async function rankContent(scrapedContent) {
     ...scrapedContent.rss,
     ...scrapedContent.github,
     ...scrapedContent.social,
+    ...(scrapedContent.x || []),
   ];
 
   const rankedItems = [];

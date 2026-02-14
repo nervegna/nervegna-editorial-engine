@@ -1,10 +1,11 @@
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import config from '../config/index.js';
 import { logger } from '../utils/logger.js';
 import { saveMarkdown } from '../utils/fileSystem.js';
 
-const anthropic = new Anthropic({
-  apiKey: config.anthropic.apiKey,
+const llm = new OpenAI({
+  apiKey: config.llm.apiKey,
+  baseURL: config.llm.baseURL,
 });
 
 export async function generateEditorial(rankedItems) {
@@ -17,7 +18,7 @@ export async function generateEditorial(rankedItems) {
 
   const topItems = rankedItems.slice(0, 5);
 
-  const editorial = await generateEditorialWithClaude(topItems);
+  const editorial = await generateEditorialWithLLM(topItems);
 
   if (editorial) {
     const filename = await saveMarkdown(editorial);
@@ -59,7 +60,7 @@ if (process.argv[1] && process.argv[1].endsWith('generators/index.js')) {
   });
 }
 
-async function generateEditorialWithClaude(topItems) {
+async function generateEditorialWithLLM(topItems) {
   const targetWords = (config.content.targetReadingTimeMin + config.content.targetReadingTimeMax) / 2 * config.content.wordsPerMinute;
 
   const sourcesText = topItems.map((item, idx) =>
@@ -89,26 +90,23 @@ Write an engaging editorial that synthesizes these sources into a coherent narra
   const maxRetries = 3;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const message = await anthropic.messages.create({
-        model: config.anthropic.model,
-        max_tokens: config.anthropic.maxTokens,
-        messages: [{
-          role: 'user',
-          content: prompt,
-        }],
+      const response = await llm.chat.completions.create({
+        model: config.llm.model,
+        max_tokens: config.llm.maxTokens,
+        messages: [{ role: 'user', content: prompt }],
       });
 
-      const editorial = message.content[0].text;
+      const editorial = response.choices[0].message.content;
       logger.info(`Generated editorial: ${editorial.length} characters`);
 
       return editorial;
     } catch (error) {
-      if (attempt < maxRetries && error.status === 529) {
+      if (attempt < maxRetries && (error.status === 429 || error.status === 503)) {
         const wait = attempt * 10;
-        logger.warn(`API overloaded, retrying in ${wait}s (attempt ${attempt}/${maxRetries})...`);
+        logger.warn(`API rate limited, retrying in ${wait}s (attempt ${attempt}/${maxRetries})...`);
         await new Promise(r => setTimeout(r, wait * 1000));
       } else {
-        logger.error('Failed to generate editorial with Claude:', error.message);
+        logger.error('Failed to generate editorial:', error.message);
         throw error;
       }
     }

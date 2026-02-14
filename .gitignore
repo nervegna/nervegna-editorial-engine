@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
 yarn.lock
 
 # Environment variables
@@ -14,9 +13,12 @@ logs/
 npm-debug.log*
 
 # Output
-output/
 generated/
 *.md.bak
+
+# Next.js
+.next/
+out/
 
 # OS
 .DS_Store

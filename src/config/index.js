@@ -18,9 +18,10 @@ function envInt(key, fallback) {
 }
 
 export const config = {
-  anthropic: {
-    apiKey: process.env.ANTHROPIC_API_KEY,
-    model: process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001',
+  llm: {
+    apiKey: process.env.LLM_API_KEY,
+    baseURL: process.env.LLM_BASE_URL || 'https://api.minimax.io/v1',
+    model: process.env.LLM_MODEL || 'MiniMax-M2.5',
     maxTokens: 4096,
   },
 
@@ -44,6 +45,11 @@ export const config = {
     token: process.env.GITHUB_TOKEN,
     topics: ['generative-ai', 'agentic-ai', 'ai-agents', 'llm', 'claude'],
     minStars: 50,
+  },
+
+  xai: {
+    apiKey: process.env.XAI_API_KEY,
+    searchTopics: (process.env.XAI_SEARCH_TOPICS || 'agentic AI,generative AI,AI agents,LLM,AI-native').split(',').map(k => k.trim()),
   },
 
   social: {
@@ -75,7 +81,7 @@ export const config = {
   },
 
   paths: {
-    output: path.join(__dirname, '../../output'),
+    output: path.join(__dirname, '../../content/editorials'),
     logs: path.join(__dirname, '../../logs'),
     data: path.join(__dirname, '../../data'),
   },
