@@ -48,7 +48,7 @@ export const config = {
   },
 
   scheduler: {
-    cronSchedule: process.env.CRON_SCHEDULE || '0 */72 * * *',
+    cronSchedule: process.env.CRON_SCHEDULE || '0 0 */3 * *',
     intervalHours: 72,
   },
 

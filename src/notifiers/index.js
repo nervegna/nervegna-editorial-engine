@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { marked } from 'marked';
 import config from '../config/index.js';
 import { logger } from '../utils/logger.js';
 
@@ -44,8 +45,6 @@ function extractTitle(markdownContent) {
 }
 
 function generateEmailHTML(editorial) {
-  const { marked } = require('marked');
-
   const bodyHTML = marked.parse(editorial.content);
 
   return `
