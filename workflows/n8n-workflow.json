@@ -1,0 +1,75 @@
+{
+  "name": "Nervegna Editorial Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 72
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "command": "cd /path/to/nervegna-editorial-engine && npm start -- --now"
+      },
+      "name": "Run Editorial Engine",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "message",
+        "operation": "send",
+        "toEmail": "nervegna.tommaso@gmail.com",
+        "subject": "=Editorial Engine Completed",
+        "emailType": "html",
+        "message": "=<h2>Workflow Completed</h2><p>Status: {{$node[\"Run Editorial Engine\"].json[\"success\"]}}</p>"
+      },
+      "name": "Email Notification",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [650, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Run Editorial Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Editorial Engine": {
+      "main": [
+        [
+          {
+            "node": "Email Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2024-02-13T00:00:00.000Z",
+  "versionId": "1"
+}
