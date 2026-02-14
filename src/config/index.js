@@ -20,7 +20,7 @@ function envInt(key, fallback) {
 export const config = {
   anthropic: {
     apiKey: process.env.ANTHROPIC_API_KEY,
-    model: 'claude-sonnet-4-5-20250929',
+    model: process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001',
     maxTokens: 4096,
   },
 

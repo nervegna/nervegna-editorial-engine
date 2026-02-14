@@ -86,22 +86,31 @@ Requirements:
 
 Write an engaging editorial that synthesizes these sources into a coherent narrative with your unique perspective.`;
 
-  try {
-    const message = await anthropic.messages.create({
-      model: config.anthropic.model,
-      max_tokens: config.anthropic.maxTokens,
-      messages: [{
-        role: 'user',
-        content: prompt,
-      }],
-    });
+  const maxRetries = 3;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const message = await anthropic.messages.create({
+        model: config.anthropic.model,
+        max_tokens: config.anthropic.maxTokens,
+        messages: [{
+          role: 'user',
+          content: prompt,
+        }],
+      });
 
-    const editorial = message.content[0].text;
-    logger.info(`Generated editorial: ${editorial.length} characters`);
+      const editorial = message.content[0].text;
+      logger.info(`Generated editorial: ${editorial.length} characters`);
 
-    return editorial;
-  } catch (error) {
-    logger.error('Failed to generate editorial with Claude:', error.message);
-    throw error;
+      return editorial;
+    } catch (error) {
+      if (attempt < maxRetries && error.status === 529) {
+        const wait = attempt * 10;
+        logger.warn(`API overloaded, retrying in ${wait}s (attempt ${attempt}/${maxRetries})...`);
+        await new Promise(r => setTimeout(r, wait * 1000));
+      } else {
+        logger.error('Failed to generate editorial with Claude:', error.message);
+        throw error;
+      }
+    }
   }
 }

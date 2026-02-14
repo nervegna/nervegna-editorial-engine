@@ -7,15 +7,20 @@ const anthropic = config.anthropic.apiKey
   : null;
 
 let warnedNoApiKey = false;
+let consecutiveFailures = 0;
+const MAX_FAILURES = 3;
 
 export async function calculateRelevanceScore(item) {
   const povKeywords = config.content.povKeywords;
 
   const keywordScore = calculateKeywordMatch(item, povKeywords);
 
-  if (!anthropic) {
+  if (!anthropic || consecutiveFailures >= MAX_FAILURES) {
     if (!warnedNoApiKey) {
-      logger.warn('No Anthropic API key, using keyword-only relevance scoring');
+      const reason = !anthropic
+        ? 'No Anthropic API key'
+        : `API unavailable after ${MAX_FAILURES} consecutive failures`;
+      logger.warn(`${reason}, using keyword-only relevance scoring`);
       warnedNoApiKey = true;
     }
     return keywordScore;
@@ -23,9 +28,15 @@ export async function calculateRelevanceScore(item) {
 
   try {
     const semanticScore = await calculateSemanticRelevance(item, povKeywords);
+    consecutiveFailures = 0;
     return (keywordScore * 0.3) + (semanticScore * 0.7);
   } catch (error) {
-    logger.error('Semantic scoring failed, falling back to keyword match:', error.message);
+    consecutiveFailures++;
+    if (consecutiveFailures >= MAX_FAILURES) {
+      logger.warn(`API failed ${MAX_FAILURES}x in a row, switching to keyword-only for remaining items`);
+    } else {
+      logger.error(`Semantic scoring failed (${consecutiveFailures}/${MAX_FAILURES}):`, error.message);
+    }
     return keywordScore;
   }
 }
