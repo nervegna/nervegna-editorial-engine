@@ -53,3 +53,19 @@ export async function scrapeAllSources() {
 }
 
 export { scrapeRSSFeeds, scrapeGitHubTrending, scrapeSocialMedia };
+
+// Standalone execution
+if (process.argv[1] && process.argv[1].endsWith('scrapers/index.js')) {
+  scrapeAllSources()
+    .then(results => {
+      logger.info('Scraping complete:', JSON.stringify({
+        rss: results.rss.length,
+        github: results.github.length,
+        social: results.social.length,
+      }));
+    })
+    .catch(error => {
+      logger.error('Scraping failed:', error);
+      process.exit(1);
+    });
+}

@@ -2,17 +2,22 @@ import Anthropic from '@anthropic-ai/sdk';
 import config from '../config/index.js';
 import { logger } from '../utils/logger.js';
 
-const anthropic = new Anthropic({
-  apiKey: config.anthropic.apiKey,
-});
+const anthropic = config.anthropic.apiKey
+  ? new Anthropic({ apiKey: config.anthropic.apiKey })
+  : null;
+
+let warnedNoApiKey = false;
 
 export async function calculateRelevanceScore(item) {
   const povKeywords = config.content.povKeywords;
 
   const keywordScore = calculateKeywordMatch(item, povKeywords);
 
-  if (!config.anthropic.apiKey) {
-    logger.warn('No Anthropic API key, using keyword-only relevance scoring');
+  if (!anthropic) {
+    if (!warnedNoApiKey) {
+      logger.warn('No Anthropic API key, using keyword-only relevance scoring');
+      warnedNoApiKey = true;
+    }
     return keywordScore;
   }
 

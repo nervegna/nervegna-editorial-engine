@@ -43,3 +43,21 @@ export async function rankContent(scrapedContent) {
 }
 
 export { calculateEngagementScore, calculateRelevanceScore };
+
+// Standalone execution
+if (process.argv[1] && process.argv[1].endsWith('rankers/index.js')) {
+  import('../scrapers/index.js').then(({ scrapeAllSources }) => {
+    scrapeAllSources()
+      .then(scrapedContent => rankContent(scrapedContent))
+      .then(ranked => {
+        logger.info(`Ranking complete: ${ranked.length} items passed threshold`);
+        ranked.forEach(item => {
+          logger.info(`  ${item.title} — composite: ${item.scores.composite.toFixed(3)}`);
+        });
+      })
+      .catch(error => {
+        logger.error('Ranking failed:', error);
+        process.exit(1);
+      });
+  });
+}

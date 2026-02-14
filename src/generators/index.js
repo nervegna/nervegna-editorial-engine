@@ -37,6 +37,28 @@ export async function generateEditorial(rankedItems) {
   return null;
 }
 
+// Standalone execution
+if (process.argv[1] && process.argv[1].endsWith('generators/index.js')) {
+  import('../scrapers/index.js').then(({ scrapeAllSources }) => {
+    import('../rankers/index.js').then(({ rankContent }) => {
+      scrapeAllSources()
+        .then(scraped => rankContent(scraped))
+        .then(ranked => generateEditorial(ranked))
+        .then(editorial => {
+          if (editorial) {
+            logger.info(`Editorial generated: ${editorial.filename}`);
+          } else {
+            logger.warn('No editorial generated');
+          }
+        })
+        .catch(error => {
+          logger.error('Generation failed:', error);
+          process.exit(1);
+        });
+    });
+  });
+}
+
 async function generateEditorialWithClaude(topItems) {
   const targetWords = (config.content.targetReadingTimeMin + config.content.targetReadingTimeMax) / 2 * config.content.wordsPerMinute;
 

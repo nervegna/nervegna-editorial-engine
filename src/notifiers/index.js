@@ -39,6 +39,27 @@ export async function sendNotification(editorial) {
   }
 }
 
+// Standalone execution
+if (process.argv[1] && process.argv[1].endsWith('notifiers/index.js')) {
+  import('../utils/fileSystem.js').then(({ listEditorials, readMarkdown }) => {
+    const editorials = listEditorials();
+    if (editorials.length === 0) {
+      logger.warn('No editorials found to notify about');
+      process.exit(0);
+    }
+    const latest = editorials[0];
+    const content = readMarkdown(latest);
+    sendNotification({
+      content,
+      filename: latest,
+      sources: [],
+    }).then(sent => {
+      logger.info(sent ? 'Notification sent' : 'Notification failed');
+      process.exit(sent ? 0 : 1);
+    });
+  });
+}
+
 function extractTitle(markdownContent) {
   const match = markdownContent.match(/^#\s+(.+)$/m);
   return match ? match[1] : 'Untitled Editorial';

@@ -288,7 +288,7 @@ Sources:
 
 - **Runtime**: Node.js 18+
 - **AI**: Claude Sonnet 4.5 (Anthropic SDK)
-- **Scraping**: RSS Parser, Axios, Cheerio, Octokit
+- **Scraping**: RSS Parser, Axios, Octokit
 - **Scheduling**: node-cron
 - **Notifications**: Nodemailer
 - **Markdown**: marked

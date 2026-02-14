@@ -7,6 +7,16 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
+function envFloat(key, fallback) {
+  const val = parseFloat(process.env[key]);
+  return isNaN(val) ? fallback : val;
+}
+
+function envInt(key, fallback) {
+  const val = parseInt(process.env[key]);
+  return isNaN(val) ? fallback : val;
+}
+
 export const config = {
   anthropic: {
     apiKey: process.env.ANTHROPIC_API_KEY,
@@ -53,14 +63,14 @@ export const config = {
   },
 
   scoring: {
-    minEngagementScore: parseFloat(process.env.MIN_ENGAGEMENT_SCORE) || 0.3,
-    minRelevanceScore: parseFloat(process.env.MIN_RELEVANCE_SCORE) || 0.6,
+    minEngagementScore: envFloat('MIN_ENGAGEMENT_SCORE', 0.3),
+    minRelevanceScore: envFloat('MIN_RELEVANCE_SCORE', 0.6),
   },
 
   content: {
-    targetReadingTimeMin: parseInt(process.env.TARGET_READING_TIME_MIN) || 6,
-    targetReadingTimeMax: parseInt(process.env.TARGET_READING_TIME_MAX) || 10,
-    wordsPerMinute: parseInt(process.env.WORDS_PER_MINUTE) || 200,
+    targetReadingTimeMin: envInt('TARGET_READING_TIME_MIN', 6),
+    targetReadingTimeMax: envInt('TARGET_READING_TIME_MAX', 10),
+    wordsPerMinute: envInt('WORDS_PER_MINUTE', 200),
     povKeywords: (process.env.POV_KEYWORDS || 'agentic AI,AI-native,generative AI').split(',').map(k => k.trim()),
   },
 
